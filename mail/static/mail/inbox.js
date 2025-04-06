@@ -15,6 +15,7 @@ function compose_email() {
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('#read-email-view').style.display = 'none';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -24,7 +25,29 @@ function compose_email() {
 
 
 function view_email(id) {
-  
+  fetch(`/emails/${id}`)
+    .then(response => response.json())
+    .then(email => {
+      document.querySelector('#emails-view').style.display = 'none';
+      document.querySelector('#compose-view').style.display = 'none';
+      document.querySelector('#read-email-view').style.display = 'block';
+
+      document.querySelector('#read-email-view').innerHTML = `
+      <h3>${email.subject}</h3>
+      <strong>From: </strong>${email.sender}<br>
+      <strong>To: </strong>${email.recipients.join(", ")}<br>
+      <strong>Date: </strong>${email.timestamp}
+      <hr>
+      <p>${email.body}</p>`;
+
+      fetch(`/emails/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          read: true,
+        })
+      })
+        .then(() => console.log("Email marcado como lido"));
+    })
 }
 
 
@@ -32,6 +55,7 @@ function load_mailbox(mailbox) {
   // Mostra a caixa de emails e esconde a de composição
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#read-email-view').style.display = 'none';
 
   // Define o título da caixa
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -39,14 +63,14 @@ function load_mailbox(mailbox) {
   fetch(`/emails/${mailbox}`)
     .then(response => response.json())
     .then(emails => {
-      console.log("API acessada");
       emails.forEach(email => {
         const participantLabel = mailbox === "inbox" ? "From" : "To";
         const emailElement = document.createElement("div");
+        if (email.read) emailElement.classList.add("email-read");
         emailElement.classList.add("email-item");
         emailElement.innerHTML = `<strong>${participantLabel}: </strong>${mailbox === "inbox" ? email.sender : email.recipients.join(", ")}<br/>
-         <strong>Subject:</strong> ${email.subject}<br>
-         <strong>Date:</strong> ${email.timestamp}<br>`;
+         <strong>Subject: </strong>${email.subject}<br>
+         <strong>Date: </strong>${email.timestamp}<br>`;
         emailElement.addEventListener('click', () => {
           view_email(email.id);
         });
