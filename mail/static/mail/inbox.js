@@ -46,6 +46,38 @@ function compose_email() {
 }
 
 
+function archiveEmail(id, icon) {
+  const button = icon.parentElement;
+  button.disabled = true;
+  const isArchived = button.dataset.archived === "true";
+  fetch(`/emails/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      archived: !isArchived
+    })
+  })
+    .then(response => {
+      if (response.status === 204) {
+        return { archived: !isArchived };
+      } else {
+        throw new Error("Resposta inesperada do servidor.");
+      }
+    })
+    .then(updatedEmail => {
+      icon.classList.remove("bi-archive", "bi-archive-fill");
+      icon.classList.add(updatedEmail.archived ? "bi-archive-fill" : "bi-archive");
+      button.dataset.archived = updatedEmail.archived.toString();
+    })
+    .catch(error => {
+      console.error("Erro ao arquivar email:", error);
+      alert("Não foi possível arquivar o email.");
+    })
+    .finally(() => {
+      button.disabled = false;
+    });
+}
+
+
 function view_email(id) {
   fetch(`/emails/${id}`)
     .then(response => response.json())
@@ -108,10 +140,20 @@ function load_mailbox(mailbox) {
           spacer.style.cursor = "default";
 
           const archiveButton = document.createElement("button");
+          archiveButton.dataset.archived = email.archived
           archiveButton.classList.add("archive-btn");
           const archiveIcon = document.createElement("i");
-          archiveIcon.classList.add("bi", "bi-archive");
+          if (archiveButton.dataset.archived) {
+            archiveIcon.classList.add("bi", "bi-archive-fill");
+          } else {
+            archiveIcon.classList.add("bi", "bi-archive");
+          }
+          
           archiveButton.appendChild(archiveIcon);
+
+          archiveButton.addEventListener('click', () => {
+            archiveEmail(email.id, archiveIcon)
+          })
 
           emailElement.appendChild(spacer);
           emailElement.appendChild(archiveButton);
