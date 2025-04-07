@@ -23,26 +23,26 @@ function compose_email() {
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
 
-  document.querySelector('#compose-form').onsubmit = () =>{
-      fetch(`/emails`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          recipients: document.querySelector('#compose-recipients').value,
-          subject: document.querySelector('#compose-subject').value,
-          body: document.querySelector('#compose-body').value,
-        })
+  document.querySelector('#compose-form').onsubmit = () => {
+    fetch(`/emails`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        recipients: document.querySelector('#compose-recipients').value,
+        subject: document.querySelector('#compose-subject').value,
+        body: document.querySelector('#compose-body').value,
       })
+    })
       .then(response => response.json())
       .then(result => {
         // Print result
         console.log(result);
         load_mailbox('inbox');
       });
-      return false
-    }
+    return false
+  }
 }
 
 
@@ -88,12 +88,36 @@ function load_mailbox(mailbox) {
       emails.forEach(email => {
         const participantLabel = mailbox === "inbox" ? "From" : "To";
         const emailElement = document.createElement("div");
-        if (email.read) emailElement.classList.add("email-read");
         emailElement.classList.add("email-item");
-        emailElement.innerHTML = `<strong>${participantLabel}: </strong>${mailbox === "inbox" ? email.sender : email.recipients.join(", ")}<br/>
-         <strong>Subject: </strong>${email.subject}<br>
-         <strong>Date: </strong>${email.timestamp}<br>`;
-        emailElement.addEventListener('click', () => {
+        if (email.read) emailElement.classList.add("email-read");
+
+        const emailContent = document.createElement("div");
+        emailContent.innerHTML = `
+          <strong>${participantLabel}: </strong>${mailbox === "inbox" ? email.sender : email.recipients.join(", ")}<br/>
+          <strong>Subject: </strong>${email.subject}<br>
+          <strong>Date: </strong>${email.timestamp}<br>
+        `;
+        emailContent.classList.add("email-item-content");
+
+        emailElement.appendChild(emailContent);
+
+        if (mailbox !== "sent") {
+          const spacer = document.createElement("div");
+          spacer.style.width = "20px";
+          spacer.style.height = "100%";
+          spacer.style.cursor = "default";
+
+          const archiveButton = document.createElement("button");
+          archiveButton.classList.add("archive-btn");
+          const archiveIcon = document.createElement("i");
+          archiveIcon.classList.add("bi", "bi-archive");
+          archiveButton.appendChild(archiveIcon);
+
+          emailElement.appendChild(spacer);
+          emailElement.appendChild(archiveButton);
+        }
+
+        emailContent.addEventListener('click', () => {
           view_email(email.id);
         });
 

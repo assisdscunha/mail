@@ -6,10 +6,31 @@ textarea {
     background-color: #808080 !important;
 }
 
-.email-item{ 
+.email-item {
     border: 1px solid #ccc;
     padding: 10px;
     margin: 5px;
-    cursor: pointer;
     background-color: #ffffff;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.email-item-content {
+    cursor: pointer;
+    padding-right: 20px;
+    flex: 1;
+}
+
+.archive-btn {
+    margin-top: 5px;
+    padding: 5px 10px;
+    background-color: #ddd;
+    border: none;
+    border-radius: 4px;
+}
+
+.archive-btn:hover {
+    background-color: #bbb;
 }
