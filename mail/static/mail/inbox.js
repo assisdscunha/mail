@@ -60,7 +60,7 @@ function view_email(id) {
       <strong>To: </strong>${email.recipients.join(", ")}<br>
       <strong>Date: </strong>${email.timestamp}
       <hr>
-      <p>${email.body}</p>`;
+      <p>${email.body.replace(/\n/g, "<br>")}</p>`;
 
       fetch(`/emails/${id}`, {
         method: "PUT",
