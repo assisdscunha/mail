@@ -48,6 +48,7 @@ function compose_email() {
 
 function archiveEmail(id, icon) {
   const button = icon.parentElement;
+  const emailItem = button.closest(".email-item");
   button.disabled = true;
   const isArchived = button.dataset.archived === "true";
   fetch(`/emails/${id}`, {
@@ -66,7 +67,10 @@ function archiveEmail(id, icon) {
     .then(updatedEmail => {
       icon.classList.remove("bi-archive", "bi-archive-fill");
       icon.classList.add(updatedEmail.archived ? "bi-archive-fill" : "bi-archive");
-      button.dataset.archived = updatedEmail.archived.toString();
+      emailItem.style.animation = "hide 2s forwards";
+      emailItem.addEventListener('animationend', () => {
+        emailItem.remove();
+      });
     })
     .catch(error => {
       console.error("Erro ao arquivar email:", error);

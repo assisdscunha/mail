@@ -34,3 +34,17 @@ textarea {
 .archive-btn:hover {
     background-color: #bbb;
 }
+
+@keyframes hide {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(100%);
+        height: 0;
+        margin: 0;
+        padding: 0;
+      }
+}
