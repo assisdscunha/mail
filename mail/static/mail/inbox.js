@@ -143,7 +143,7 @@ function load_mailbox(mailbox) {
           archiveButton.dataset.archived = email.archived
           archiveButton.classList.add("archive-btn");
           const archiveIcon = document.createElement("i");
-          if (archiveButton.dataset.archived) {
+          if (email.archived) {
             archiveIcon.classList.add("bi", "bi-archive-fill");
           } else {
             archiveIcon.classList.add("bi", "bi-archive");
