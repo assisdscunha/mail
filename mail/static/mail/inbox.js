@@ -4,24 +4,21 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
-  document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#compose').addEventListener('click', () => compose_email('', '', ''));
 
   // By default, load the inbox
   load_mailbox('inbox');
 });
 
 
-function compose_email() {
-
-  // Show compose view and hide other views
+function compose_email(recipients, subject, body) {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
   document.querySelector('#read-email-view').style.display = 'none';
 
-  // Clear out composition fields
-  document.querySelector('#compose-recipients').value = '';
-  document.querySelector('#compose-subject').value = '';
-  document.querySelector('#compose-body').value = '';
+  document.querySelector('#compose-recipients').value = recipients;
+  document.querySelector('#compose-subject').value = subject;
+  document.querySelector('#compose-body').value = body;
 
   document.querySelector('#compose-form').onsubmit = () => {
     fetch(`/emails`, {
@@ -67,7 +64,7 @@ function archiveEmail(id, icon) {
     .then(updatedEmail => {
       icon.classList.remove("bi-archive", "bi-archive-fill");
       icon.classList.add(updatedEmail.archived ? "bi-archive-fill" : "bi-archive");
-      emailItem.style.animation = "hide 2s forwards";
+      emailItem.style.animationPlayState = 'running';
       emailItem.addEventListener('animationend', () => {
         emailItem.remove();
       });
@@ -91,12 +88,44 @@ function view_email(id) {
       document.querySelector('#read-email-view').style.display = 'block';
 
       document.querySelector('#read-email-view').innerHTML = `
-      <h3>${email.subject}</h3>
-      <strong>From: </strong>${email.sender}<br>
-      <strong>To: </strong>${email.recipients.join(", ")}<br>
-      <strong>Date: </strong>${email.timestamp}
-      <hr>
-      <p>${email.body.replace(/\n/g, "<br>")}</p>`;
+        <div style="position: relative;">
+          <button style="position: absolute; top: 0; right: 0; margin: 10px; border: 1rem;" id="reply-button"><i id="reply-icon" class="bi bi-reply"></i></button>
+          <h3>${email.subject}</h3>
+          <strong>From: </strong>${email.sender}<br>
+          <strong>To: </strong>${email.recipients.join(", ")}<br>
+          <strong>Date: </strong>${email.timestamp}
+          <hr>
+          <p>${email.body.replace(/\n/g, "<br>")}</p>
+        </div>`;
+
+      const replyButton = document.querySelector('#reply-button');
+      const replyicon = document.querySelector('#reply-icon');
+
+      function activateReplyIcon() {
+        replyicon.classList.remove('bi-reply');
+        replyicon.classList.add('bi-reply-fill');
+      }
+
+      function deactivateReplyIcon(send) {
+        replyicon.classList.remove('bi-reply-fill');
+        replyicon.classList.add('bi-reply');
+
+        if (send) {
+          let eSubject = email.subject;
+          let eBody = `\n\nOn ${email.timestamp} ${email.sender} wrote:\n${email.body}`;
+          if (!eSubject.startsWith("RE: ")) {
+            eSubject = `RE: ${email.subject}`;
+          };
+
+          compose_email(email.sender, eSubject, eBody);
+        };
+      }
+
+      replyButton.addEventListener('mousedown', activateReplyIcon);
+      replyButton.addEventListener('mouseup', () => deactivateReplyIcon(true));
+      document.addEventListener('mouseup', () => {
+        if (replyicon.classList.contains('bi-reply-fill')) deactivateReplyIcon(false);
+      });
 
       fetch(`/emails/${id}`, {
         method: "PUT",
@@ -152,7 +181,7 @@ function load_mailbox(mailbox) {
           } else {
             archiveIcon.classList.add("bi", "bi-archive");
           }
-          
+
           archiveButton.appendChild(archiveIcon);
 
           archiveButton.addEventListener('click', () => {
